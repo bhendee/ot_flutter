@@ -32,8 +32,8 @@ class Tableaux {
     }
 
     /// formats the tableaux as a list of lists of TableRows, which can generate Flutter tables
-    List<List<TableRow>> toTablesRows() {
-        return [for (Tableau t in tableaux) t.toTableRows()];
+    List<List<TableRow>> toTablesRows(BuildContext context) {
+        return [for (Tableau t in tableaux) t.toTableRows(context)];
     }
 
     /// creates a Tableaux based off an OTHelp-style list
@@ -147,11 +147,23 @@ class Tableau {
     }
 
     /// formats the Tableaux as a list of Flutter table rows, which can generate a table
-    List<TableRow> toTableRows() {
+    List<TableRow> toTableRows(BuildContext context) {
         List<TableRow> rows = [];
         // the first row should be the input followed by a list of constraints
-        List<TableCell> firstRow = [TableCell(child:Text('Input: $input'))];
-        firstRow += [for (Constraint c in constraints) TableCell(child:Text(c.toString(), textAlign:TextAlign.right))];
+        List<TableCell> firstRow = [TableCell(child: TextField(
+            decoration: const InputDecoration(labelText:'Input', contentPadding: EdgeInsets.symmetric(horizontal:8.0)),
+            controller: TextEditingController(text: input),
+        ))];
+        firstRow += [for (Constraint c in constraints) TableCell(
+            child:TextField(
+                decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(horizontal:8.0),
+                    border:InputBorder.none,
+                ),
+                style: Theme.of(context).textTheme.bodyLarge,
+                controller: TextEditingController(text: c.toString()),
+            ),
+        )];
         rows.add(TableRow(children:firstRow));
         // all other rows are a candidate followed by violations
         for(String c in candidates) {
@@ -159,7 +171,15 @@ class Tableau {
             if(c == victor) {
                 cFormat = '☞ $c';
             }
-            List<TableCell> row = [TableCell(child:Text(cFormat, textAlign:TextAlign.right))];
+            List<TableCell> row = [TableCell(child:TextField(
+                textAlign: TextAlign.right,
+                decoration: const InputDecoration(
+                    contentPadding:EdgeInsets.symmetric(horizontal:8.0),
+                    border: InputBorder.none,
+                    isCollapsed:true,
+                ),
+                controller: TextEditingController(text: cFormat)
+            ))];
             row += [for (Constraint con in constraints)
                 TableCell(child:Text('*' * violations[c]![con]!, textAlign:TextAlign.right))
             ];

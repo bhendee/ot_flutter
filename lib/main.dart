@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'dart:convert';
 import 'tableaux.dart';
+import 'package:file_saver/file_saver.dart';
 
 void main() {
     runApp(const OTApp());
@@ -17,7 +18,7 @@ class OTApp extends StatelessWidget {
         theme: ThemeData(
             useMaterial3: true,
         ),
-        home: const TableauPage(title: 'Tableaux Demo'),
+        home: const TableauPage(title: 'Tableaux Demeaux'),
         );
     }
 }
@@ -31,8 +32,9 @@ class TableauPage extends StatefulWidget {
 }
 
 class _TableauPageState extends State<TableauPage> {
-    List<List<TableRow>> rowTableaux = const [[TableRow(children:[TableCell(child:Text(''))])]];
+    Tableaux tableaux = Tableaux([], []);
     
+    /// allows user to pick a tsv file for tableauxfication
     Future<void> _pickFile() async {
         FilePickerResult? result = await FilePicker.platform.pickFiles(withData:true);
         if (result != null) {
@@ -42,11 +44,15 @@ class _TableauPageState extends State<TableauPage> {
             final List<List<String>> tsvList = const CsvToListConverter(fieldDelimiter: '\t').convert(text, shouldParseNumbers: false);
             final tableaux = Tableaux.fromList(tsvList);
             setState(() {
-                rowTableaux = tableaux.toTablesRows();
+                this.tableaux = tableaux;
             });
         }
         
         }
+    }
+
+    Future<void> _saveFile() async {
+        
     }
 
     @override
@@ -59,7 +65,7 @@ class _TableauPageState extends State<TableauPage> {
             child: ListView(
                 padding: const EdgeInsets.all(8.0),
                 children: [
-                    for (List<TableRow> t in rowTableaux)
+                    for (List<TableRow> t in tableaux.toTablesRows(context))
                     Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Table(
