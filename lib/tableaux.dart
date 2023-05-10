@@ -1,10 +1,9 @@
-import 'package:csv/csv.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Tableaux {
-    final List<Constraint> constraints;
-    final List<Tableau> tableaux;
+    late final List<Constraint> constraints;
+    late final List<Tableau> tableaux;
 
     /// generates a set of Tableaux from the list of constraints and tableaux, which must match the given constraints
     Tableaux(this.constraints, this.tableaux) {
@@ -35,6 +34,59 @@ class Tableaux {
     /// formats the tableaux as a list of lists of TableRows, which can generate Flutter tables
     List<List<TableRow>> toTablesRows() {
         return [for (Tableau t in tableaux) t.toTableRows()];
+    }
+
+    /// creates a Tableaux based off an OTHelp-style list
+    /// there is currently no format checking and any malformed lists are undefined behavior
+    Tableaux.fromList(List<List<String>> othelp) {
+        // initialize constraints
+        List<Constraint> workingConstraints = [];
+        // the first two rows of our input contain constraints, from the 4th column on
+        for (int c = 3; c < othelp[0].length; c++) {
+            workingConstraints.add(Constraint(othelp[1][c], longName: othelp[0][c]));
+        }
+        constraints = workingConstraints;
+        // initialize tableaux
+        List<Tableau> workingTableaux = [];
+        // the rest of the rows contain tableau information
+        // the first step is to locate the tableaux
+        List<int> tableaucations = [2];
+        for (int r = 3; r < othelp.length; r++) {
+            if (othelp[r][0] != '') {
+                tableaucations.add(r);
+            }
+        }
+        // add the end of the tableaux for eas of use
+        tableaucations.add(othelp.length);
+        // begin pulling data out of the tableaux
+        // iterating tableau by tableau
+        for (int i = 0; i < tableaucations.length - 1; i++) {
+            // the 0th column of the 0th row of each tableau is input
+            String input = othelp[tableaucations[i]][0];
+            String victor = '';
+            List<String> candidates = [];
+            List<List<int>> violations = [];
+            // iterating rows within each tableau
+            for(int r = tableaucations[i]; r < tableaucations[i+1]; r++) {
+                candidates.add(othelp[r][1]);
+                if (othelp[r][2] != '') {
+                    victor = othelp[r][1];
+                }
+                // iterate through each constraint to grab violations
+                List<int> candidateViolations = [];
+                for (int c = 3; c < othelp[0].length; c++) {
+                    if (othelp[r][c] != '') {
+                        candidateViolations.add(int.parse(othelp[r][c]));
+                    } else {
+                        candidateViolations.add(0);
+                    }
+                }
+                violations.add(candidateViolations);
+            }
+            // turn the collected data into a tableau
+            workingTableaux.add(Tableau(input, constraints, candidates, violations, victor));
+        }
+        tableaux = workingTableaux;
     }
 }
 
@@ -99,7 +151,7 @@ class Tableau {
         List<TableRow> rows = [];
         // the first row should be the input followed by a list of constraints
         List<TableCell> firstRow = [TableCell(child:Text('Input: $input'))];
-        firstRow += [for (Constraint c in constraints) TableCell(child:Text(c.toString()))];
+        firstRow += [for (Constraint c in constraints) TableCell(child:Text(c.toString(), textAlign:TextAlign.right))];
         rows.add(TableRow(children:firstRow));
         // all other rows are a candidate followed by violations
         for(String c in candidates) {
@@ -107,9 +159,9 @@ class Tableau {
             if(c == victor) {
                 cFormat = '☞ $c';
             }
-            List<TableCell> row = [TableCell(child:Text(cFormat))];
+            List<TableCell> row = [TableCell(child:Text(cFormat, textAlign:TextAlign.right))];
             row += [for (Constraint con in constraints)
-                TableCell(child:Text(violations[c]![con].toString()))
+                TableCell(child:Text('*' * violations[c]![con]!, textAlign:TextAlign.right))
             ];
             rows.add(TableRow(children:row));
         }
