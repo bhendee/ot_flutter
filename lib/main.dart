@@ -3,7 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'dart:convert';
 import 'tableaux.dart';
-import 'package:file_saver/file_saver.dart';
+import 'package:editable/editable.dart';
 
 void main() {
     runApp(const OTApp());
@@ -33,7 +33,7 @@ class TableauPage extends StatefulWidget {
 
 class _TableauPageState extends State<TableauPage> {
     Tableaux tableaux = Tableaux([], []);
-    
+    Map<Tableau, GlobalKey<EditableState>> _editableKeys = {};
     /// allows user to pick a tsv file for tableauxfication
     Future<void> _pickFile() async {
         FilePickerResult? result = await FilePicker.platform.pickFiles(withData:true);
@@ -42,17 +42,20 @@ class _TableauPageState extends State<TableauPage> {
         if(file.bytes != null) {
             final String text = utf8.decode(file.bytes!);
             final List<List<String>> tsvList = const CsvToListConverter(fieldDelimiter: '\t').convert(text, shouldParseNumbers: false);
-            final tableaux = Tableaux.fromList(tsvList);
+            final tableaux = Tableaux.fromOTHelpList(tsvList);
             setState(() {
                 this.tableaux = tableaux;
+                _editableKeys = {for (Tableau t in tableaux.tableaux) t:GlobalKey<EditableState>()};
             });
         }
         
         }
     }
 
-    Future<void> _saveFile() async {
-        
+    void _updateTableaux(String s) {
+        setState(() {
+            tableaux = Tableaux.fromEditables([for (Tableau t in tableaux) {'cols': _editableKeys[t]?.currentState?.columns, 'rows': _editableKeys[t]?.currentState?.rows}]);
+        });
     }
 
     @override
@@ -62,19 +65,18 @@ class _TableauPageState extends State<TableauPage> {
             title: Text(widget.title),
         ),
         body: Center(
-            child: ListView(
+            child: Expanded(child: ListView(
                 padding: const EdgeInsets.all(8.0),
                 children: [
-                    for (List<TableRow> t in tableaux.toTablesRows(context))
-                    Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Table(
-                            border: TableBorder.all(width: 0.5, color: Theme.of(context).dividerColor),
-                            children: t,
-                        ),
-                    ),
+                    for (Tableau t in tableaux)
+                    Expanded(child:Editable(
+                        key: _editableKeys[t],
+                        columns: t.toEditableLists()['cols'],
+                        rows: t.toEditableLists()['rows'],
+                        onSubmitted: _updateTableaux,
+                    ))
                 ],
-            ),
+            )),
         ),
         floatingActionButton: ElevatedButton(
             onPressed: _pickFile,

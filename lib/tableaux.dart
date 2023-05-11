@@ -1,10 +1,11 @@
 import 'dart:math';
-import 'package:flutter/material.dart';
 
-class Tableaux {
+class Tableaux extends Iterable<Tableau>{
     late final List<Constraint> constraints;
     late final List<Tableau> tableaux;
 
+    @override
+    Iterator<Tableau> get iterator => tableaux.iterator;
     /// generates a set of Tableaux from the list of constraints and tableaux, which must match the given constraints
     Tableaux(this.constraints, this.tableaux) {
         // verify that all constraints are present
@@ -26,19 +27,67 @@ class Tableaux {
     String toString() {
         String output = '';
         for(Tableau t in tableaux) {
-            output += '${t}\n';
+            output += '$t\n';
         }
         return output;
     }
 
-    /// formats the tableaux as a list of lists of TableRows, which can generate Flutter tables
-    List<List<TableRow>> toTablesRows(BuildContext context) {
-        return [for (Tableau t in tableaux) t.toTableRows(context)];
+    /// generates Tableaux from Editable rows and columns
+    Tableaux.fromEditables(List<Map<String, List<dynamic>?>> states) {
+        Set<Constraint> workingConstraints = {};
+        List<Tableau> workingTableaux = [];
+        // the first step is to identify all necessary constraints
+        // look through each state
+        for (Map<String, List<dynamic>?> state in states) {
+            // we should always have a list of column information
+            if (state['cols'] is List<Map<String, dynamic>>) {
+                List<Map<String, dynamic>> cols = state['cols']! as List<Map<String, dynamic>>;
+                for (Map<String, dynamic> col in cols) {
+                    if (col['key'] != 'cand') {
+                        workingConstraints.add(Constraint(col['title']));
+                    }
+                }
+            }
+        }
+        constraints = [for (Constraint c in workingConstraints) c];
+        // next we need to build the tableaux
+        for (Map<String, List<dynamic>?> state in states) {
+            if (state['rows'] is List<Map<String, dynamic>>) {
+                List<Map<String, dynamic>> rows = state['rows']! as List<Map<String, dynamic>>;
+                String? victor;
+                List<String> candidates = [];
+                List<List<int>> violations = [];
+                String? input;
+                if (state['cols'] is List<Map<String, dynamic>>) {
+                    List<Map<String, dynamic>> cols = state['cols'] as List<Map<String, dynamic>>;
+                    for (Map<String, dynamic> col in cols) {
+                        if (col['key'] == 'cand') {
+                            input = col['title'].substring('Input: '.length);
+                        }
+                    }
+                }
+                for (int i = 0; i < rows.length; i++) {
+                    Map<String, dynamic> row = rows[i];
+                    String cand = row['cand'];
+                    if (cand.startsWith('☞ ')) {
+                        cand = cand.substring(2);
+                        if (victor != null) {
+                            throw const FormatException('Multiple victors in input');
+                        }
+                        victor = cand;
+                    }
+                    for (int j = 0; j < constraints.length; j++) {
+                        violations[i][j] = int.parse(row[constraints[j]]);
+                    }
+                }
+                workingTableaux.add(Tableau(input!, constraints, candidates, violations, victor!));
+            }
+        }
     }
 
-    /// creates a Tableaux based off an OTHelp-style list
+    /// creates Tableaux based off an OTHelp-style list
     /// there is currently no format checking and any malformed lists are undefined behavior
-    Tableaux.fromList(List<List<String>> othelp) {
+    Tableaux.fromOTHelpList(List<List<String>> othelp) {
         // initialize constraints
         List<Constraint> workingConstraints = [];
         // the first two rows of our input contain constraints, from the 4th column on
@@ -84,7 +133,7 @@ class Tableaux {
                 violations.add(candidateViolations);
             }
             // turn the collected data into a tableau
-            workingTableaux.add(Tableau(input, constraints, candidates, violations, victor));
+            workingTableaux.add(Tableau(input, [for (Constraint c in constraints) c], candidates, violations, victor));
         }
         tableaux = workingTableaux;
     }
@@ -101,7 +150,18 @@ class Constraint {
         return shortName;
     }
 
-    static List<Constraint> fromStrings(List<String> constraints) {
+    @override
+    bool operator==(Object other) {
+        if (other is Constraint) {
+            return other.shortName == shortName;
+        }
+        return false;
+    }
+
+    @override
+    int get hashCode => shortName.hashCode;
+
+    static List<Constraint> fromStrings(Iterable<String> constraints) {
         return [for (String s in constraints) Constraint(s)];
     }
 }
@@ -146,46 +206,29 @@ class Tableau {
         return output;
     }
 
-    /// formats the Tableaux as a list of Flutter table rows, which can generate a table
-    List<TableRow> toTableRows(BuildContext context) {
-        List<TableRow> rows = [];
-        // the first row should be the input followed by a list of constraints
-        List<TableCell> firstRow = [TableCell(child: TextField(
-            decoration: const InputDecoration(labelText:'Input', contentPadding: EdgeInsets.symmetric(horizontal:8.0)),
-            controller: TextEditingController(text: input),
-        ))];
-        firstRow += [for (Constraint c in constraints) TableCell(
-            child:TextField(
-                decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal:8.0),
-                    border:InputBorder.none,
-                ),
-                style: Theme.of(context).textTheme.bodyLarge,
-                controller: TextEditingController(text: c.toString()),
-            ),
-        )];
-        rows.add(TableRow(children:firstRow));
-        // all other rows are a candidate followed by violations
+    /// formats the Tableaux as lists which can generate an Editable table
+    /// key 'rows' and 'cols' for rows and columns respectively
+    Map<String, List<Map<String, dynamic>>> toEditableLists() {
+        // populate columns with correct data
+        List<Map<String, dynamic>> cols = [];
+        cols.add({'title':'Input: $input', 'widthFactor':0.2, 'key':'cand'});
+        cols += [for (Constraint c in constraints)
+            {'title':'$c', 'widthFactor':0.2, 'key':'$c'},
+        ];
+        List<Map<String, dynamic>> rows = [];
+        // populate rows with candidates and violations
         for(String c in candidates) {
             String cFormat = c;
             if(c == victor) {
                 cFormat = '☞ $c';
             }
-            List<TableCell> row = [TableCell(child:TextField(
-                textAlign: TextAlign.right,
-                decoration: const InputDecoration(
-                    contentPadding:EdgeInsets.symmetric(horizontal:8.0),
-                    border: InputBorder.none,
-                    isCollapsed:true,
-                ),
-                controller: TextEditingController(text: cFormat)
-            ))];
-            row += [for (Constraint con in constraints)
-                TableCell(child:Text('*' * violations[c]![con]!, textAlign:TextAlign.right))
-            ];
-            rows.add(TableRow(children:row));
+            Map<String, dynamic> row = {'cand': cFormat};
+            for (Constraint con in constraints) {
+                row['$con'] = violations[c]?[con];
+            }
+            rows.add(row);
         }
-        return rows;
+        return {'cols':cols, 'rows':rows};
     }
 }
 
