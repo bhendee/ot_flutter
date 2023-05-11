@@ -38,7 +38,8 @@ dependencies:
   file_picker: ^5.3.0
   csv: ^5.0.2
   file_saver: ^0.2.2
-  editable: ^2.0.0
+  editable: 
+    git: https://github.com/bhendee/editable-flexfix
 
 dev_dependencies:
   flutter_test:

@@ -45,7 +45,7 @@ class _TableauPageState extends State<TableauPage> {
             final tableaux = Tableaux.fromOTHelpList(tsvList);
             setState(() {
                 this.tableaux = tableaux;
-                _editableKeys = {for (Tableau t in tableaux.tableaux) t:GlobalKey<EditableState>()};
+                _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
             });
         }
         
@@ -54,7 +54,8 @@ class _TableauPageState extends State<TableauPage> {
 
     void _updateTableaux(String s) {
         setState(() {
-            tableaux = Tableaux.fromEditables([for (Tableau t in tableaux) {'cols': _editableKeys[t]?.currentState?.columns, 'rows': _editableKeys[t]?.currentState?.rows}]);
+            tableaux = Tableaux.fromEditables([for (Tableau t in tableaux) {'cols': _editableKeys[t]?.currentState?.columns, 'rows': _editableKeys[t]?.currentState?.rows, 'edits': _editableKeys[t]?.currentState?.editedRows}]);
+            _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
         });
     }
 
@@ -64,20 +65,19 @@ class _TableauPageState extends State<TableauPage> {
         appBar: AppBar(
             title: Text(widget.title),
         ),
-        body: Center(
-            child: Expanded(child: ListView(
-                padding: const EdgeInsets.all(8.0),
+        body: Flex(
+                direction: Axis.vertical,
                 children: [
                     for (Tableau t in tableaux)
-                    Expanded(child:Editable(
-                        key: _editableKeys[t],
-                        columns: t.toEditableLists()['cols'],
-                        rows: t.toEditableLists()['rows'],
-                        onSubmitted: _updateTableaux,
-                    ))
+                            Editable(
+                                key: _editableKeys[t],
+                                columns: t.toEditableLists()['cols'],
+                                rows: t.toEditableLists()['rows'],
+                                trHeight: 40.0,
+                                onSubmitted: _updateTableaux,
+                            ),
                 ],
-            )),
-        ),
+            ),
         floatingActionButton: ElevatedButton(
             onPressed: _pickFile,
             child: const Text('Import Tab-Separated Tableaux'),

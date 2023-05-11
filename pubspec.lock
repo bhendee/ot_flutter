@@ -92,10 +92,11 @@ packages:
   editable:
     dependency: "direct main"
     description:
-      name: editable
-      sha256: d587689f2ccff750178fb9073eaf9c1eda8253bb2acc4ffa22e6009c7fa7f8fb
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: HEAD
+      resolved-ref: "9ab639a115e6073c54215b42ca90c6869d9f070f"
+      url: "https://github.com/bhendee/editable-flexfix"
+    source: git
     version: "2.0.0"
   enum_to_string:
     dependency: transitive

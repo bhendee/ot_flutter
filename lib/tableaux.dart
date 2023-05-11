@@ -51,6 +51,23 @@ class Tableaux extends Iterable<Tableau>{
         }
         constraints = [for (Constraint c in workingConstraints) c];
         // next we need to build the tableaux
+        // first we need to replace any rows with their edited counterpart
+        for (Map<String, List<dynamic>?> state in states) {
+            List<dynamic>? edits = state['edits'];
+            if (edits != null) {
+                for (Map<dynamic, dynamic> edit in edits) {
+                    int rowNum = edit['row'];
+                    if (state['rows'] is List<Map<String, dynamic>>) {
+                        Map<String, dynamic> row = state['rows']![rowNum];
+                        for (String key in edit.keys) {
+                            if (key != 'row') {
+                                row[key] = edit[key];
+                            }
+                        }
+                    }
+                }
+            }
+        }
         for (Map<String, List<dynamic>?> state in states) {
             if (state['rows'] is List<Map<String, dynamic>>) {
                 List<Map<String, dynamic>> rows = state['rows']! as List<Map<String, dynamic>>;
@@ -58,6 +75,7 @@ class Tableaux extends Iterable<Tableau>{
                 List<String> candidates = [];
                 List<List<int>> violations = [];
                 String? input;
+                // input will be in the "candidate" column title
                 if (state['cols'] is List<Map<String, dynamic>>) {
                     List<Map<String, dynamic>> cols = state['cols'] as List<Map<String, dynamic>>;
                     for (Map<String, dynamic> col in cols) {
@@ -66,9 +84,11 @@ class Tableaux extends Iterable<Tableau>{
                         }
                     }
                 }
-                for (int i = 0; i < rows.length; i++) {
-                    Map<String, dynamic> row = rows[i];
+                // everything else is in the rows
+                for (Map<String, dynamic> row in rows) {
                     String cand = row['cand'];
+                    List<int> rowViolations = [];
+                    // a little bit of janky code to demanicule the victor
                     if (cand.startsWith('☞ ')) {
                         cand = cand.substring(2);
                         if (victor != null) {
@@ -76,13 +96,16 @@ class Tableaux extends Iterable<Tableau>{
                         }
                         victor = cand;
                     }
-                    for (int j = 0; j < constraints.length; j++) {
-                        violations[i][j] = int.parse(row[constraints[j]]);
+                    candidates.add(cand);
+                    for (Constraint c in constraints) {
+                        rowViolations.add(row[c.toString()]);
                     }
+                    violations.add(rowViolations);
                 }
                 workingTableaux.add(Tableau(input!, constraints, candidates, violations, victor!));
             }
         }
+        tableaux = workingTableaux;
     }
 
     /// creates Tableaux based off an OTHelp-style list
