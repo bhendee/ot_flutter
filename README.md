@@ -1,16 +1,11 @@
-# flutter_application
+# Optimality Theory Flutter
+This is a little WIP tool to handle Tableaux and solving them in various forms of Optimality Theory.
 
-A new Flutter project.
+Optimality Theory is a theory used in Phonology, a field of Linguistics.
 
-## Getting Started
+This app aims to replicate the functionality of a highly dated Java app, OTHelp, with some more modern comforts.
+Documentation of Tableaux tab-separated formatting is available for OTHelp elsewhere and works here.
 
-This project is a starting point for a Flutter application.
+One of the major foci is in-app editing of tableaux, because the tab-separated format is clumsy to edit directly.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Currently this hardly works so don't get your hopes up.
