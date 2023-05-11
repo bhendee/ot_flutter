@@ -98,7 +98,7 @@ class Tableaux extends Iterable<Tableau>{
                     }
                     candidates.add(cand);
                     for (Constraint c in constraints) {
-                        rowViolations.add(row[c.toString()]);
+                        rowViolations.add(int.parse(row['$c'].toString()));
                     }
                     violations.add(rowViolations);
                 }
@@ -160,9 +160,48 @@ class Tableaux extends Iterable<Tableau>{
         }
         tableaux = workingTableaux;
     }
+
+    /// converts the Tableaux into an OTHelp-style list
+    List<List<String>> toOTHelpList() {
+        List<List<String>> othelp = [];
+        // first three columns of first row should be blank
+        othelp.add(['', '', '']);
+        // then we add the constraint long names (only for backwards-compatibility)
+        // ot_flutter has no direct long name support
+        othelp[0] += [for (Constraint c in constraints) c.longName];
+        // similar process for second row
+        othelp.add(['', '', '']);
+        othelp[1] += [for (Constraint c in constraints) c.shortName];
+        // and then we do each tableau one-by-one
+        for (Tableau t in this) {
+            // go row-by-row
+            for (int i = 0; i < t.candidates.length; i++) {
+                List<String> currentRow = [];
+                if (i == 0) {
+                    currentRow.add(t.input);
+                } else {
+                    currentRow.add('');
+                }
+                currentRow.add(t.candidates[i]);
+                if(t.candidates[i] == t.victor) {
+                    currentRow.add('1');
+                } else {
+                    currentRow.add('');
+                }
+                // add violations
+                for (Constraint c in constraints) {
+                    currentRow.add('${t.violations[t.candidates[i]]?[c]}');
+                }
+                // add row to full list
+                othelp.add(currentRow);
+            }
+        }
+        return othelp;
+    }
 }
 
 class Constraint {
+    /// there is no real support for long names
     final String longName;
     final String shortName;
 
@@ -234,9 +273,9 @@ class Tableau {
     Map<String, List<Map<String, dynamic>>> toEditableLists() {
         // populate columns with correct data
         List<Map<String, dynamic>> cols = [];
-        cols.add({'title':'Input: $input', 'widthFactor':0.2, 'key':'cand'});
+        cols.add({'title':'Input: $input', 'widthFactor':0.1, 'key':'cand'});
         cols += [for (Constraint c in constraints)
-            {'title':'$c', 'widthFactor':0.2, 'key':'$c'},
+            {'title':'$c', 'widthFactor':0.05, 'key':'$c'},
         ];
         List<Map<String, dynamic>> rows = [];
         // populate rows with candidates and violations
@@ -253,14 +292,4 @@ class Tableau {
         }
         return {'cols':cols, 'rows':rows};
     }
-}
-
-void main() {
-    List<Constraint> constraints = Constraint.fromStrings(['*IVS', 'I[V]']);
-    Tableau t = Tableau('/ada/', constraints, ['ada', 'ata'], [[1, 0], [0, 1]], 'ata');
-    Tableau s = Tableau('/ata/', constraints, ['ada', 'ata'], [[1, 1], [0, 0]], 'ata');
-
-    Tableaux tableaux = Tableaux(t.constraints, [s, t]);
-
-    print(tableaux);
 }

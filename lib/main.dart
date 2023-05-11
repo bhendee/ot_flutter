@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:csv/csv.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'tableaux.dart';
 import 'package:editable/editable.dart';
+import 'package:file_saver/file_saver.dart';
 
 void main() {
     runApp(const OTApp());
@@ -59,11 +61,24 @@ class _TableauPageState extends State<TableauPage> {
         });
     }
 
+    void _saveTableaux() {
+        List<List<String>> othelp = tableaux.toOTHelpList();
+        String text = const ListToCsvConverter(fieldDelimiter: '\t').convert(othelp);
+        Uint8List bytes = Uint8List.fromList(utf8.encode(text));
+        FileSaver.instance.saveFile(name:'tableaux', bytes:bytes, ext:'.txt', mimeType: MimeType.text);
+    }
+
     @override
     Widget build(BuildContext context) {
         return Scaffold(
         appBar: AppBar(
             title: Text(widget.title),
+            actions: [
+                IconButton(
+                    icon: const Icon(Icons.save),
+                    onPressed: _saveTableaux,
+                )
+            ],
         ),
         body: Flex(
                 direction: Axis.vertical,
