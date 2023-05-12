@@ -23,7 +23,7 @@ jobs:
           git config --global user.email benjaminhendeesmith@gmail.com
           git config --global user.name bhendee
           git status
-          git remote add origin https://${{secrets.PAGES_COMMIT}@github.com/bhendee/bhendee.github.io.git
+          git remote add origin https://${{secrets.PAGES_COMMIT}}@github.com/bhendee/bhendee.github.io.git
           git checkout -b main
           git add --all
           git commit -m "update ot_flutter"
