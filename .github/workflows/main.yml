@@ -15,11 +15,13 @@ jobs:
         with:
           channel: 'stable'
           flutter-version: '3.7.x'
+          cache: true
       - run: flutter config --enable-web
       - run: flutter pub get
       - run: flutter build web --release
       - run: |
           cd build/web
+          echo 'ot.ben.style' >> CNAME
           git init
           git config --global user.email benjaminhendeesmith@gmail.com
           git config --global user.name bhendee
