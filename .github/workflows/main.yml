@@ -1,0 +1,30 @@
+name: Flutter Web
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    name: Build Web
+    env:
+      my_secret: ${{secrets.PAGES_COMMIT}}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: subosito/flutter-action@v1
+        with:
+          channel: 'dev'
+      - run: flutter config --enable-web
+      - run: flutter pub get
+      - run: flutter build web --release
+      - run: |
+          cd build/web
+          git init
+          git config --global user.email benjaminhendeesmith@gmail.com
+          git config --global user.name bhendee
+          git status
+          git remote add origin https://${{secrets.PAGES_COMMIT}@github.com/bhendee/bhendee.github.io.git
+          git checkout -b main
+          git add --all
+          git commit -m "update ot_flutter"
+          git push origin main -f
