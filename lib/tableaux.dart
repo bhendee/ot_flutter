@@ -202,10 +202,12 @@ class Tableaux extends Iterable<Tableau>{
 
 class Constraint {
     /// there is no real support for long names
-    final String longName;
+    late final String longName;
     final String shortName;
 
-    Constraint(this.shortName, {this.longName = ''});
+    Constraint(this.shortName, {String? longName}) {
+        this.longName = longName ?? shortName;
+    }
 
     @override
     String toString() {

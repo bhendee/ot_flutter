@@ -36,6 +36,7 @@ class TableauPage extends StatefulWidget {
 class _TableauPageState extends State<TableauPage> {
     Tableaux tableaux = Tableaux([], []);
     Map<Tableau, GlobalKey<EditableState>> _editableKeys = {};
+    String fileName = 'tableaux';
     /// allows user to pick a tsv file for tableauxfication
     Future<void> _pickFile() async {
         FilePickerResult? result = await FilePicker.platform.pickFiles(withData:true);
@@ -46,6 +47,7 @@ class _TableauPageState extends State<TableauPage> {
             final List<List<String>> tsvList = const CsvToListConverter(fieldDelimiter: '\t').convert(text, shouldParseNumbers: false);
             final tableaux = Tableaux.fromOTHelpList(tsvList);
             setState(() {
+                fileName = file.name.substring(0, file.name.length - (file.extension?.length ?? 0) - 1);
                 this.tableaux = tableaux;
                 _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
             });
@@ -54,18 +56,31 @@ class _TableauPageState extends State<TableauPage> {
         }
     }
 
+    /// shows a SnackBar with provided message
+    void _alert(String s) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(s),
+        ));
+    }
+
     void _updateTableaux(String s) {
-        setState(() {
-            tableaux = Tableaux.fromEditables([for (Tableau t in tableaux) {'cols': _editableKeys[t]?.currentState?.columns, 'rows': _editableKeys[t]?.currentState?.rows, 'edits': _editableKeys[t]?.currentState?.editedRows}]);
-            _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
-        });
+        try {
+            setState(() {
+                tableaux = Tableaux.fromEditables([for (Tableau t in tableaux) {'cols': _editableKeys[t]?.currentState?.columns, 'rows': _editableKeys[t]?.currentState?.rows, 'edits': _editableKeys[t]?.currentState?.editedRows}]);
+                _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
+            });
+        } on FormatException catch(e) {
+            _alert('Seems like you put too many victors');
+        } catch(e) {
+            _alert('Seems like you messed up the Tableaux');
+        }
     }
 
     void _saveTableaux() {
         List<List<String>> othelp = tableaux.toOTHelpList();
         String text = const ListToCsvConverter(fieldDelimiter: '\t').convert(othelp);
         Uint8List bytes = Uint8List.fromList(utf8.encode(text));
-        FileSaver.instance.saveFile(name:'tableaux', bytes:bytes, ext:'.txt', mimeType: MimeType.text);
+        FileSaver.instance.saveFile(name:fileName, bytes:bytes, ext:'.txt', mimeType: MimeType.text);
     }
 
     @override
@@ -80,9 +95,21 @@ class _TableauPageState extends State<TableauPage> {
                 )
             ],
         ),
-        body: Flex(
-                direction: Axis.vertical,
-                children: [
+        body: ListView(
+                padding: const EdgeInsets.all(8.0),
+                children: <Widget>[
+                    TextField(
+                        controller: TextEditingController(
+                            text:fileName
+                        ),
+                        onSubmitted: (String s) {
+                            setState(() {
+                                fileName = s;
+                            });
+                        }
+                    )
+                ] +
+                [
                     for (Tableau t in tableaux)
                             Editable(
                                 key: _editableKeys[t],
