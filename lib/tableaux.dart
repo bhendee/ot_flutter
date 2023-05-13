@@ -1,5 +1,6 @@
 import 'dart:math';
 
+
 class Tableaux extends Iterable<Tableau>{
     late final List<Constraint> constraints;
     late final List<Tableau> tableaux;
@@ -68,6 +69,7 @@ class Tableaux extends Iterable<Tableau>{
                 }
             }
         }
+        // then we need to pull violations from the rows
         for (Map<String, List<dynamic>?> state in states) {
             if (state['rows'] is List<Map<String, dynamic>>) {
                 List<Map<String, dynamic>> rows = state['rows']! as List<Map<String, dynamic>>;
@@ -98,7 +100,11 @@ class Tableaux extends Iterable<Tableau>{
                     }
                     candidates.add(cand);
                     for (Constraint c in constraints) {
-                        rowViolations.add(int.parse(row['$c'].toString()));
+                        if(row['$c'] != '') {
+                            rowViolations.add(int.parse(row['$c'].toString()));
+                        } else {
+                            rowViolations.add(0);
+                        }
                     }
                     violations.add(rowViolations);
                 }
@@ -115,7 +121,7 @@ class Tableaux extends Iterable<Tableau>{
         List<Constraint> workingConstraints = [];
         // the first two rows of our input contain constraints, from the 4th column on
         for (int c = 3; c < othelp[0].length; c++) {
-            workingConstraints.add(Constraint(othelp[1][c], longName: othelp[0][c]));
+            workingConstraints.add(Constraint(othelp[1][c], othelp[0][c]));
         }
         constraints = workingConstraints;
         // initialize tableaux
@@ -161,6 +167,36 @@ class Tableaux extends Iterable<Tableau>{
         tableaux = workingTableaux;
     }
 
+    /// returns a Tableaux like this one, with new names for constraints and new constraints
+    Tableaux changeConstraints(Map<String, dynamic> newNames) {
+        // extract actual names from the constraints
+        Map<Constraint, Constraint> renameMap = {for (var oldName in newNames.keys) Constraint(oldName): Constraint(newNames[oldName].value!)};
+        List<Constraint> newConstraints = [for (Constraint c in renameMap.keys) renameMap[c]!];
+        List<Tableau> newTableaux = [];
+        // revise tableaux with new names
+        for (Tableau t in tableaux) {
+            newTableaux.add(Tableau(
+                t.input,
+                newConstraints,
+                t.candidates,
+                [
+                    for (String cand in t.candidates) 
+                    [
+                        for (Constraint c in renameMap.keys)
+                            t.violations[cand]?[c] ?? 0
+                    ]
+                ],
+                t.victor,
+            ));
+        }
+        return Tableaux(newConstraints, newTableaux);
+    }
+
+    /// returns a Tableaux like this one, with an extra constraint
+    Tableaux addConstraint(Constraint c) {
+        return Tableaux(constraints + [c], [for (Tableau t in this) t.addConstraint(c)]);
+    }
+
     /// converts the Tableaux into an OTHelp-style list
     List<List<String>> toOTHelpList() {
         List<List<String>> othelp = [];
@@ -202,12 +238,13 @@ class Tableaux extends Iterable<Tableau>{
 
 class Constraint {
     /// there is no real support for long names
-    late final String longName;
-    final String shortName;
+    final String? _longName;
+    final String _shortName;
 
-    Constraint(this.shortName, {String? longName}) {
-        this.longName = longName ?? shortName;
-    }
+    String get shortName => _shortName;
+    String get longName => _longName ?? _shortName;
+
+    const Constraint(this._shortName, [this._longName]);
 
     @override
     String toString() {
@@ -234,7 +271,7 @@ class Tableau {
     final String input ;
     final List<Constraint> constraints ;
     final List<String> candidates;
-    Map<String, Map<Constraint, int>> violations = {};
+    late final Map<String, Map<Constraint, int>> violations;
     final String victor;
 
     /// generates an unsolved Tableau for the given input, setting the victor to the supplied victor.
@@ -245,6 +282,9 @@ class Tableau {
             throw const FormatException('Victor not found in candidate list');
         }
     }
+
+    /// generates a Tableau from plain field values
+    Tableau.fromFields(this.input, this.constraints, this.candidates, this.violations, this.victor);
 
     @override
     String toString() {
@@ -277,7 +317,7 @@ class Tableau {
         List<Map<String, dynamic>> cols = [];
         cols.add({'title':'Input: $input', 'widthFactor':0.1, 'key':'cand'});
         cols += [for (Constraint c in constraints)
-            {'title':'$c', 'widthFactor':0.05, 'key':'$c'},
+            {'title':'$c', 'widthFactor': 0.7 / constraints.length, 'key':'$c'},
         ];
         List<Map<String, dynamic>> rows = [];
         // populate rows with candidates and violations
@@ -293,5 +333,15 @@ class Tableau {
             rows.add(row);
         }
         return {'cols':cols, 'rows':rows};
+    }
+
+    /// returns a tableau like this one, with a new constraint added
+    Tableau addConstraint(Constraint c) {
+        List<Constraint> newConstraints = constraints + [c];
+        Map<String, Map<Constraint, int>> newViolations = Map<String, Map<Constraint, int>>.from(violations);
+        for (String cand in candidates) {
+            newViolations[cand]?.addAll({c: 0});
+        }
+        return Tableau.fromFields(input, newConstraints, candidates, newViolations, victor);
     }
 }

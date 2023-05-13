@@ -4,8 +4,9 @@ import 'package:csv/csv.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'tableaux.dart';
-import 'package:editable/editable.dart';
+import 'package:editableaux/editableaux.dart';
 import 'package:file_saver/file_saver.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 void main() {
     runApp(const OTApp());
@@ -36,6 +37,7 @@ class TableauPage extends StatefulWidget {
 class _TableauPageState extends State<TableauPage> {
     Tableaux tableaux = Tableaux([], []);
     Map<Tableau, GlobalKey<EditableState>> _editableKeys = {};
+    GlobalKey<FormBuilderState> _constraintFormKey = GlobalKey<FormBuilderState>();
     String fileName = 'tableaux';
     /// allows user to pick a tsv file for tableauxfication
     Future<void> _pickFile() async {
@@ -56,6 +58,68 @@ class _TableauPageState extends State<TableauPage> {
         }
     }
 
+    /// updates constraint changes based on form values
+    void _writeConstraintChange() {
+        setState(() {
+            tableaux = tableaux.changeConstraints(_constraintFormKey.currentState!.fields);
+            _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
+            _constraintFormKey = GlobalKey<FormBuilderState>();
+        });
+    }
+
+    /// adds an additional constraint to the tableaux
+    void _addConstraint() {
+        setState(()  {
+            tableaux = tableaux.addConstraint(Constraint('Constraint ${tableaux.constraints.length}'));
+            _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
+            _constraintFormKey = GlobalKey<FormBuilderState>();
+        });
+    }
+
+    /// allows user to add or modify constraints
+    void _editConstraints() {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+                List<Constraint> constraints = tableaux.constraints;
+                return StatefulBuilder(builder: (BuildContext context, void Function(void Function()) setAlertState)
+                    {
+
+                        return FormBuilder(
+                            key: _constraintFormKey,
+                            child:AlertDialog(
+                                title: const Text('Constraint Editing'),
+                                content: Column(
+                                        children: <Widget>[
+                                            for (Constraint c in constraints) 
+                                            FormBuilderTextField(name: '$c', initialValue: '$c')
+                                        ] + [
+                                            TextButton(
+                                                onPressed: () {
+                                                    setAlertState(() {
+                                                        constraints = constraints + [Constraint('Constraint ${constraints.length}')];
+                                                    });
+                                                },
+                                                child: const Text('Add Constraint'),
+                                            )
+                                        ]
+                                    ),
+                                actions: [
+                                    TextButton(
+                                        child: const Text('Save'),
+                                        onPressed: () {
+                                            Navigator.pop(context);
+                                            _writeConstraintChange();
+                                        }
+                                    )
+                                ],
+                            )
+                        );
+                    }
+                );
+            }
+        );
+    }
     /// shows a SnackBar with provided message
     void _alert(String s) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -69,10 +133,12 @@ class _TableauPageState extends State<TableauPage> {
                 tableaux = Tableaux.fromEditables([for (Tableau t in tableaux) {'cols': _editableKeys[t]?.currentState?.columns, 'rows': _editableKeys[t]?.currentState?.rows, 'edits': _editableKeys[t]?.currentState?.editedRows}]);
                 _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
             });
-        } on FormatException catch(e) {
-            _alert('Seems like you put too many victors');
+        } on FormatException {
+            _alert('Seems like you put too many victors. Changes not saved.');
+        } on CastError {
+            _alert('Seems like you forgot a victor Changes not saved.');
         } catch(e) {
-            _alert('Seems like you messed up the Tableaux');
+            _alert('Seems like you messed up the Tableaux. Changes not saved.');
         }
     }
 
@@ -86,44 +152,59 @@ class _TableauPageState extends State<TableauPage> {
     @override
     Widget build(BuildContext context) {
         return Scaffold(
-        appBar: AppBar(
-            title: Text(widget.title),
-            actions: [
-                IconButton(
-                    icon: const Icon(Icons.save),
-                    onPressed: _saveTableaux,
-                )
-            ],
-        ),
-        body: ListView(
-                padding: const EdgeInsets.all(8.0),
-                children: <Widget>[
-                    TextField(
-                        controller: TextEditingController(
-                            text:fileName
-                        ),
-                        onSubmitted: (String s) {
-                            setState(() {
-                                fileName = s;
-                            });
-                        }
+            appBar: AppBar(
+                title: Text(widget.title),
+                actions: [
+                    IconButton(
+                        icon: const Icon(Icons.save),
+                        onPressed: _saveTableaux,
                     )
-                ] +
-                [
-                    for (Tableau t in tableaux)
-                            Editable(
-                                key: _editableKeys[t],
-                                columns: t.toEditableLists()['cols'],
-                                rows: t.toEditableLists()['rows'],
-                                trHeight: 40.0,
-                                onSubmitted: _updateTableaux,
-                            ),
                 ],
             ),
-        floatingActionButton: ElevatedButton(
-            onPressed: _pickFile,
-            child: const Text('Import Tab-Separated Tableaux'),
-        ),
+            body: ListView(
+                    padding: const EdgeInsets.all(8.0),
+                    children: <Widget>[
+                        TextField(
+                            controller: TextEditingController(
+                                text:fileName
+                            ),
+                            onSubmitted: (String s) {
+                                setState(() {
+                                    fileName = s;
+                                });
+                            }
+                        )
+                    ] +
+                    [
+                        for (Tableau t in tableaux)
+                                Editable(
+                                    key: _editableKeys[t],
+                                    thSize: 14,
+                                    thWeight: FontWeight.bold,
+                                    columns: t.toEditableLists()['cols']!,
+                                    rows: t.toEditableLists()['rows']!,
+                                    trHeight: 40.0,
+                                    tdPaddingTop: 0.0,
+                                    onSubmitted: _updateTableaux,
+                                    showCreateButton: true,
+                                    showRemoveIcon: true,
+                                    createButtonAlign: CrossAxisAlignment.end,
+                                ),
+                    ],
+                ),
+            floatingActionButton: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                    ElevatedButton(
+                        onPressed: _pickFile,
+                        child: const Text('Import Tab-Separated Tableaux'),
+                    ),
+                    ElevatedButton(
+                        onPressed: _editConstraints,
+                        child: const Text('Edit Constraints'),
+                    ),
+                ],
+            ),
         );
     }
 }
