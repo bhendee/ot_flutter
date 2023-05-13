@@ -66,16 +66,6 @@ class _TableauPageState extends State<TableauPage> {
             _constraintFormKey = GlobalKey<FormBuilderState>();
         });
     }
-
-    /// adds an additional constraint to the tableaux
-    void _addConstraint() {
-        setState(()  {
-            tableaux = tableaux.addConstraint(Constraint('Constraint ${tableaux.constraints.length}'));
-            _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
-            _constraintFormKey = GlobalKey<FormBuilderState>();
-        });
-    }
-
     /// allows user to add or modify constraints
     void _editConstraints() {
         showDialog(
