@@ -196,7 +196,7 @@ class Tableaux extends Iterable<Tableau>{
     Tableaux changeInputs(Map<String, dynamic> newNameStates) {
         Map<String, String> newNames = {for (String s in newNameStates.keys) s: newNameStates[s]!.value};
         List<Tableau> newTableaux = [];
-        // revise tableaux with new names
+        // revise old tableaux with new input names
         for (Tableau t in tableaux) {
             newTableaux.add(Tableau.fromFields(
                 newNames[t.input]!,
@@ -255,6 +255,13 @@ class Tableaux extends Iterable<Tableau>{
                 othelp.add(currentRow);
             }
         }
+        // remove tabs because they are the devil's work
+        othelp = [
+            for (List<String> l in othelp) [
+                for (String s in l)
+                    s.contains('\t') ? s : 'YOU THOUGHT YOU COULD FOOL ME? YOU THOUGHT YOU COULD SNEAK A TAB INTO MY BELOVED TABLEAUX? YOU WILL PAY FOR YOUR CRIMES'
+            ]
+        ];
         return othelp;
     }
 }
