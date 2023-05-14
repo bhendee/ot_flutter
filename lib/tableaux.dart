@@ -192,9 +192,32 @@ class Tableaux extends Iterable<Tableau>{
         return Tableaux(newConstraints, newTableaux);
     }
 
-    /// returns a Tableaux like this one, with an extra constraint
-    Tableaux addConstraint(Constraint c) {
-        return Tableaux(constraints + [c], [for (Tableau t in this) t.addConstraint(c)]);
+    /// returns a Tableaux like this one but with new names for inputs and new inputs
+    Tableaux changeInputs(Map<String, dynamic> newNameStates) {
+        Map<String, String> newNames = {for (String s in newNameStates.keys) s: newNameStates[s]!.value};
+        List<Tableau> newTableaux = [];
+        // revise tableaux with new names
+        for (Tableau t in tableaux) {
+            newTableaux.add(Tableau.fromFields(
+                newNames[t.input]!,
+                constraints,
+                t.candidates,
+                t.violations,
+                t.victor,
+            ));
+        }
+        // add new tableaux
+        List<String> names = List<String>.from(newNames.keys).sublist(tableaux.length);
+        newTableaux += [for (String key in names) 
+            Tableau(
+                newNames[key]!,
+                constraints,
+                [newNames[key]!],
+                [[for(Constraint c in constraints) 0]],
+                newNames[key]!,
+            )
+        ];
+        return Tableaux(constraints, newTableaux);
     }
 
     /// converts the Tableaux into an OTHelp-style list

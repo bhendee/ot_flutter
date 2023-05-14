@@ -38,6 +38,7 @@ class _TableauPageState extends State<TableauPage> {
     Tableaux tableaux = Tableaux([], []);
     Map<Tableau, GlobalKey<EditableState>> _editableKeys = {};
     GlobalKey<FormBuilderState> _constraintFormKey = GlobalKey<FormBuilderState>();
+    GlobalKey<FormBuilderState> _inputFormKey = GlobalKey<FormBuilderState>();
     String fileName = 'tableaux';
     /// allows user to pick a tsv file for tableauxfication
     Future<void> _pickFile() async {
@@ -117,6 +118,7 @@ class _TableauPageState extends State<TableauPage> {
         ));
     }
 
+    /// updates Tableaux with new data from Editable.
     void _updateTableaux(String s) {
         try {
             setState(() {
@@ -132,11 +134,65 @@ class _TableauPageState extends State<TableauPage> {
         }
     }
 
+    /// saves Tableaux to a file
     void _saveTableaux() {
         List<List<String>> othelp = tableaux.toOTHelpList();
         String text = const ListToCsvConverter(fieldDelimiter: '\t').convert(othelp);
         Uint8List bytes = Uint8List.fromList(utf8.encode(text));
         FileSaver.instance.saveFile(name:fileName, bytes:bytes, ext:'.txt', mimeType: MimeType.text);
+    }
+
+    /// displays and handles dialog for editing input forms
+    void _editInputs() {
+        showDialog(
+            context: context,
+            builder: (BuildContext context) {
+                List<String> input = [for (Tableau t in tableaux) t.input];
+                return StatefulBuilder(builder: (BuildContext context, void Function(void Function()) setAlertState)
+                    {
+
+                        return FormBuilder(
+                            key: _inputFormKey,
+                            child:AlertDialog(
+                                title: const Text('Input Editing'),
+                                content: Column(
+                                        children: <Widget>[
+                                            for (String s in input) 
+                                            FormBuilderTextField(name: s, initialValue: s)
+                                        ] + [
+                                            TextButton(
+                                                onPressed: () {
+                                                    setAlertState(() {
+                                                        input = input + ['Input ${input.length}'];
+                                                    });
+                                                },
+                                                child: const Text('Add Input'),
+                                            )
+                                        ]
+                                    ),
+                                actions: [
+                                    TextButton(
+                                        child: const Text('Save'),
+                                        onPressed: () {
+                                            Navigator.pop(context);
+                                            _writeInputChange();
+                                        }
+                                    )
+                                ],
+                            )
+                        );
+                    }
+                );
+            }
+        );
+    }
+    /// updates input changes based on form values
+    void _writeInputChange() {
+        setState(() {
+            tableaux = tableaux.changeInputs(_inputFormKey.currentState!.fields);
+            _editableKeys = {for (Tableau t in tableaux) t:GlobalKey<EditableState>()};
+            _inputFormKey = GlobalKey<FormBuilderState>();
+        });
     }
 
     @override
@@ -193,6 +249,10 @@ class _TableauPageState extends State<TableauPage> {
                         onPressed: _editConstraints,
                         child: const Text('Edit Constraints'),
                     ),
+                    ElevatedButton(
+                        onPressed: _editInputs,
+                        child: const Text('Edit Inputs'),
+                    )
                 ],
             ),
         );
