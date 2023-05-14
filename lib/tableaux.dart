@@ -24,6 +24,12 @@ class Tableaux extends Iterable<Tableau>{
         }
     }
 
+    /// creates a base tableaux for making the page not empty
+    Tableaux.demo() {
+        constraints = [const Constraint('Constraint')];
+        tableaux = [Tableau.demo()];
+    }
+
     @override
     String toString() {
         String output = '';
@@ -298,11 +304,11 @@ class Constraint {
 }
 
 class Tableau {
-    final String input ;
-    final List<Constraint> constraints ;
-    final List<String> candidates;
+    late final String input ;
+    late final List<Constraint> constraints ;
+    late final List<String> candidates;
     late final Map<String, Map<Constraint, int>> violations;
-    final String victor;
+    late final String victor;
 
     /// generates an unsolved Tableau for the given input, setting the victor to the supplied victor.
     Tableau(this.input, this.constraints, this.candidates, List<List<int>> violations, this.victor) {
@@ -311,6 +317,15 @@ class Tableau {
         if(!candidates.contains(victor)) {
             throw const FormatException('Victor not found in candidate list');
         }
+    }
+
+    /// makes a base tableau for filling space on the page
+    Tableau.demo() {
+        input = '/manicule/';
+        constraints = [const Constraint('Constraint')];
+        candidates = ['manicule'];
+        violations = {'manicule':{const Constraint('Constraint'): 0}};
+        victor = 'manicule';
     }
 
     /// generates a Tableau from plain field values

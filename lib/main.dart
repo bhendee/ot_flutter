@@ -7,6 +7,7 @@ import 'tableaux.dart';
 import 'package:editableaux/editableaux.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'homepage.dart';
 
 void main() {
     runApp(const OTApp());
@@ -21,7 +22,7 @@ class OTApp extends StatelessWidget {
         theme: ThemeData(
             useMaterial3: true,
         ),
-        home: const TableauPage(title: 'Tableaux Demeaux'),
+        home: const HomePage(title:'OT Flutter'),
         );
     }
 }
@@ -35,7 +36,7 @@ class TableauPage extends StatefulWidget {
 }
 
 class _TableauPageState extends State<TableauPage> {
-    Tableaux tableaux = Tableaux([], []);
+    Tableaux tableaux = Tableaux.demo();
     Map<Tableau, GlobalKey<EditableState>> _editableKeys = {};
     GlobalKey<FormBuilderState> _constraintFormKey = GlobalKey<FormBuilderState>();
     GlobalKey<FormBuilderState> _inputFormKey = GlobalKey<FormBuilderState>();
@@ -204,6 +205,10 @@ class _TableauPageState extends State<TableauPage> {
                     IconButton(
                         icon: const Icon(Icons.save),
                         onPressed: _saveTableaux,
+                    ),
+                    IconButton(
+                        icon: const Icon(Icons.home),
+                        onPressed: () {Navigator.pop(context);}
                     )
                 ],
             ),
