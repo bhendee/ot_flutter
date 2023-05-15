@@ -8,6 +8,7 @@ import 'package:editableaux/editableaux.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'homepage.dart';
+import 'solverpage.dart';
 
 void main() {
     runApp(const OTApp());
@@ -257,6 +258,10 @@ class _TableauPageState extends State<TableauPage> {
                     ElevatedButton(
                         onPressed: _editInputs,
                         child: const Text('Edit Inputs'),
+                    ),
+                    ElevatedButton(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SolverPage(title: 'OT Solution', tableaux: tableaux))),
+                        child: const Text('Solve Tableaux'),
                     )
                 ],
             ),
