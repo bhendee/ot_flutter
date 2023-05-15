@@ -219,7 +219,7 @@ class Tableaux extends Iterable<Tableau>{
                 newNames[key]!,
                 constraints,
                 [newNames[key]!],
-                [[for(Constraint c in constraints) 0]],
+                [List<int>.generate(constraints.length, (int i) => 0)],
                 newNames[key]!,
             )
         ];
