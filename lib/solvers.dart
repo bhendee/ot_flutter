@@ -10,7 +10,7 @@ List<Set<Constraint>> rankOT(Tableaux tableaux) {
     find all constraints which never prefer a loser over a winner
     if there are none, no ranking exists
     remove those constraints from consideration, and remove any candidates over which they select the winner
-    not that this is different from simply not selecting the candidate, which includes ties
+    note that this is different from simply not selecting the candidate, which includes ties
     run the algorithm again, on the now reduced set of constraints and candidates
     */
     // first, check if we're done, i.e. the base case
@@ -18,9 +18,11 @@ List<Set<Constraint>> rankOT(Tableaux tableaux) {
         for (Tableau t in tableaux)
             t.candidates.length == 1
     ].contains(false)) {
+        // if we already ranked all the constraints then we are done
         if (tableaux.constraints.isEmpty) {
             return [];
         }
+        // if there are "leftover" constraints we just rank them at the bottom
         return [Set<Constraint>.from(tableaux.constraints)];
     }
     // the first real step in RCD is to identify all constraints that favor no losers
