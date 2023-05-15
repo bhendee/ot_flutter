@@ -61,10 +61,6 @@ List<Set<Constraint>> rankOT(Tableaux tableaux) {
             }
         ))
     };
-    List<bool> weContain = [
-        for (Tableau t in tableaux) 
-            losers[t]!.containsAll(t.candidates.where((String cand) => cand == t.victor))
-    ];
     // next, we simply make a new Tableaux and do recursion
     List<Constraint> newConstraints = [
         for (Constraint c in tableaux.constraints)
