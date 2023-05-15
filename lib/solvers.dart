@@ -4,7 +4,26 @@ import 'tableaux.dart';
 /// sets are ranked in decreasing order - the first set is ranked highest
 /// FormatException thrown if tableaux are unrankable
 List<Set<Constraint>> rankOT(Tableaux tableaux) {
-    // the first step in RCD is to identify all constraints that favor no losers
+    /*
+    RCD Pseudocode, because this is weirdly hard to find:
+    if each tableau has only one candidate, you are done
+    find all constraints which never prefer a loser over a winner
+    if there are none, no ranking exists
+    remove those constraints from consideration, and remove any candidates over which they select the winner
+    not that this is different from simply not selecting the candidate, which includes ties
+    run the algorithm again, on the now reduced set of constraints and candidates
+    */
+    // first, check if we're done, i.e. the base case
+    if (![
+        for (Tableau t in tableaux)
+            t.candidates.length == 1
+    ].contains(false)) {
+        if (tableaux.constraints.isEmpty) {
+            return [];
+        }
+        return [Set<Constraint>.from(tableaux.constraints)];
+    }
+    // the first real step in RCD is to identify all constraints that favor no losers
     Set<Constraint> neverLoses = Set<Constraint>.from(tableaux.constraints.where(
         (Constraint c) {
             for (Tableau t in tableaux) {
@@ -26,10 +45,6 @@ List<Set<Constraint>> rankOT(Tableaux tableaux) {
     }
     // these constraints are top ranked, so they go in our list first
     List<Set<Constraint>> ranking = [neverLoses];
-    // if all constraints are ranked, this is the base case and we are done
-    if (neverLoses.containsAll(tableaux.constraints)) {
-        return ranking;
-    }
     // and we need (for each tableau) to track which losers are accounted for
     Map<Tableau, Set<String>> losers = {
         for (Tableau t in tableaux)
@@ -44,6 +59,10 @@ List<Set<Constraint>> rankOT(Tableaux tableaux) {
             }
         ))
     };
+    List<bool> weContain = [
+        for (Tableau t in tableaux) 
+            losers[t]!.containsAll(t.candidates.where((String cand) => cand == t.victor))
+    ];
     // next, we simply make a new Tableaux and do recursion
     List<Constraint> newConstraints = [
         for (Constraint c in tableaux.constraints)
