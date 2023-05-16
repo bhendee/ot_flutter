@@ -53,6 +53,35 @@ class _SolverPageState extends State<SolverPage> {
         ];
     }
 
+    List<TableRow> generateHGTableRows(Map<Constraint, num> weights, Tableau t) {
+        return [
+            // input and constraint row
+            TableRow(children:[
+                TableCell(child:Text(t.input)),
+                ...t.constraints.map((Constraint c) => TableCell(child: Text('$c'))),
+                const TableCell(child: Text('H'))
+            ]),
+            // weight row
+            TableRow(children:[
+                const TableCell(child:Text('Weight')),
+                ...t.constraints.map((Constraint c) => TableCell(child: Text('${weights[c]}'))),
+                const TableCell(child: Text(''))
+            ]),
+            // normal rows
+            ...[
+                for (String cand in t.candidates)
+                TableRow(children:[
+                    TableCell(child: Text((cand == t.victor ? '☞ ' : '') + cand)),
+                    ...[
+                        for (Constraint c in t.constraints)
+                            TableCell(child:Text(t.violations[cand]![c]!.toString()))
+                    ],
+                    TableCell(child: Text('${t.constraints.fold(0, (num x, Constraint c) => x + t.violations[cand]![c]! * weights[c]!)}'))
+                ])
+            ]
+        ];
+    }
+
     @override
     Widget build(BuildContext context) {
         late List<Set<Constraint>> otRanking;
@@ -77,7 +106,14 @@ class _SolverPageState extends State<SolverPage> {
                             ))
                         ]
                     else
-                        const Text('No OT ranking exists for the provided Tableaux')
+                        const Text('No OT ranking exists for the provided Tableaux'),
+                    ...[
+                            for (Tableau t in tableaux)
+                            Padding(padding: const EdgeInsets.all(8.0), child:Table(
+                                border: TableBorder.all(color: Colors.grey),
+                                children: generateHGTableRows(solveHG(tableaux), t)
+                            ))
+                        ]
                 ]
             )
         );
