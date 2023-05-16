@@ -129,6 +129,7 @@ class _TableauPageState extends State<TableauPage> {
             });
         } on FormatException {
             _alert('Seems like you put too many victors. Changes not saved.');
+        // ignore: deprecated_member_use
         } on CastError {
             _alert('Seems like you forgot a victor Changes not saved.');
         } catch(e) {
@@ -242,6 +243,8 @@ class _TableauPageState extends State<TableauPage> {
                                     showRemoveIcon: true,
                                     createButtonAlign: CrossAxisAlignment.end,
                                 ),
+                    ] + [
+                        const Text('You can create, import, edit, and save Tableaux from here. Changes are saved and validated when you press enter in a cell. Type a manicule or capital W followed by a space before a candidate to mark it as a winner.')
                     ],
                 ),
             floatingActionButton: Row(

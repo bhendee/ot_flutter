@@ -97,7 +97,7 @@ class Tableaux extends Iterable<Tableau>{
                     String cand = row['cand'];
                     List<int> rowViolations = [];
                     // a little bit of janky code to demanicule the victor
-                    if (cand.startsWith('☞ ')) {
+                    if (cand.startsWith('☞ ') || cand.startsWith('W ')) {
                         cand = cand.substring(2);
                         if (victor != null) {
                             throw const FormatException('Multiple victors in input');
