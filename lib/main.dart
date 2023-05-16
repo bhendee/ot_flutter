@@ -266,7 +266,7 @@ class _TableauPageState extends State<TableauPage> {
                         child: const Text('Edit Inputs'),
                     ),
                     ElevatedButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SolverPage(title: 'OT Solution', tableaux: tableaux))),
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SolverPage(title: 'Solutions', tableaux: tableaux))),
                         child: const Text('Solve Tableaux'),
                     )
                 ],

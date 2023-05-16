@@ -99,14 +99,18 @@ class _SolverPageState extends State<SolverPage> {
                 children: <Widget>[
                     if (rankingExists)
                         ...[
-                            for (Tableau t in tableaux)
-                            Padding(padding: const EdgeInsets.all(8.0), child:Table(
-                                border: TableBorder.all(color: Colors.grey),
-                                children: generateOTTableRows(otRanking, t)
-                            ))
+                            Text('OT Ranking Found: $otRanking'),
+                            ...[
+                                for (Tableau t in tableaux)
+                                Padding(padding: const EdgeInsets.all(8.0), child:Table(
+                                    border: TableBorder.all(color: Colors.grey),
+                                    children: generateOTTableRows(otRanking, t)
+                                ))
+                            ]
                         ]
                     else
                         const Text('No OT ranking exists for the provided Tableaux'),
+                    const Text('HG Solution (If this is wrong, then no solution exists):'),
                     ...[
                             for (Tableau t in tableaux)
                             Padding(padding: const EdgeInsets.all(8.0), child:Table(
