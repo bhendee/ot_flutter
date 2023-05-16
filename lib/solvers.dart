@@ -126,6 +126,11 @@ Map<Constraint, num> solveHG(Tableaux tableaux) {
         }
     }
     solver.addConstraints(constraints);
+    // ensure each weight is positive
+    solver.addConstraints([
+        for (Constraint c in tableaux.constraints)
+            params[c]! >= cass.cm(1)
+    ]);
     solver.flushUpdates();
     return {
         for (Constraint c in tableaux.constraints)
