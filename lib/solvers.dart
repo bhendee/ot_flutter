@@ -122,7 +122,7 @@ Map<Constraint, num> solveHG(Tableaux tableaux) {
             for (Constraint c in t.constraints) {
                 thisEquation -= cass.cm(t.violations[cand]![c]!.toDouble()) * params[c]!;
             }
-            constraints.add(thisEquation >= cass.cm(1));
+            constraints.add(thisEquation <= cass.cm(-1));
         }
     }
     solver.addConstraints(constraints);
