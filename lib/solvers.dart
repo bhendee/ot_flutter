@@ -122,11 +122,11 @@ Map<Constraint, num> solveHG(Tableaux tableaux) {
             for (Constraint c in t.constraints) {
                 thisEquation -= cass.cm(t.violations[cand]![c]!.toDouble()) * params[c]!;
             }
-            constraints.add(thisEquation >= cass.cm(0));
+            constraints.add(thisEquation >= cass.cm(-1));
         }
     }
     solver.addConstraints(constraints);
-    Set<dynamic> updates = solver.flushUpdates();
+    solver.flushUpdates();
     return {
         for (Constraint c in tableaux.constraints)
         c: params[c]!.value

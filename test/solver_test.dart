@@ -46,6 +46,7 @@ void main() {
                 Tableau('b', constraints, ['aa', 'bb'], [[1, 0], [0, 0]], 'bb'),
             ]
         );
-        print(solveHG(tableaux));
+        Map<Constraint, num> solution = solveHG(tableaux);
+        expect(solution, equals({const Constraint('A'):1.0, const Constraint('B'): 2.0}));
     });
 }
