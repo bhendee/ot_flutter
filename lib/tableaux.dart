@@ -265,7 +265,7 @@ class Tableaux extends Iterable<Tableau>{
         othelp = [
             for (List<String> l in othelp) [
                 for (String s in l)
-                    s.contains('\t') ? s : 'YOU THOUGHT YOU COULD FOOL ME? YOU THOUGHT YOU COULD SNEAK A TAB INTO MY BELOVED TABLEAUX? YOU WILL PAY FOR YOUR CRIMES'
+                    !s.contains('\t') ? s : 'YOU THOUGHT YOU COULD FOOL ME? YOU THOUGHT YOU COULD SNEAK A TAB INTO MY BELOVED TABLEAUX? YOU WILL PAY FOR YOUR CRIMES'
             ]
         ];
         return othelp;
