@@ -55,19 +55,29 @@ class _SolverPageState extends State<SolverPage> {
 
     @override
     Widget build(BuildContext context) {
-        List<Set<Constraint>> otRanking = rankOT(tableaux);
+        late List<Set<Constraint>> otRanking;
+        late bool rankingExists;
+        try {
+            otRanking = rankOT(tableaux);
+            rankingExists = true;
+        } on FormatException {
+            rankingExists = false;
+        }
         return Scaffold(
             appBar: AppBar(title: Text(widget.title)),
             body: ListView(
                 padding: const EdgeInsets.all(8.0),
                 children: <Widget>[
-                    ...[
-                        for (Tableau t in tableaux)
-                        Padding(padding: const EdgeInsets.all(8.0), child:Table(
-                            border: TableBorder.all(color: Colors.grey),
-                            children: generateOTTableRows(otRanking, t)
-                        ))
-                    ]
+                    if (rankingExists)
+                        ...[
+                            for (Tableau t in tableaux)
+                            Padding(padding: const EdgeInsets.all(8.0), child:Table(
+                                border: TableBorder.all(color: Colors.grey),
+                                children: generateOTTableRows(otRanking, t)
+                            ))
+                        ]
+                    else
+                        const Text('No OT ranking exists for the provided Tableaux')
                 ]
             )
         );

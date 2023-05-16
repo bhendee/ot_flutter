@@ -1,4 +1,5 @@
 import 'tableaux.dart';
+import 'package:cassowary/cassowary.dart' as cass;
 
 /// ranks constraints for the given tableaux using Recursive Constraint Demotion
 /// sets are ranked in decreasing order - the first set is ranked highest
@@ -90,4 +91,44 @@ List<Set<Constraint>> rankOT(Tableaux tableaux) {
             )
     ];
     return ranking + rankOT(Tableaux(newConstraints, newTableaux));
+}
+
+/// finds the Constraint weights which solve a Tableaux set
+Map<Constraint, num> solveHG(Tableaux tableaux) {
+    cass.Solver solver = cass.Solver();
+    // initialize parameters for each constraint
+    Map<Constraint, cass.Param> params = {
+        for (Constraint c in tableaux.constraints)
+        c: cass.Param()
+    };
+    for (Constraint c in tableaux.constraints) {
+        params[c]?.variable.name = '$c';
+    }
+    // Map<cass.Param, Constraint> antiParams = params.map((k, v) => MapEntry(v, k));
+    // generate Cassowary Constraints for each non-victor tableau entry
+    List<cass.Constraint> constraints = [];
+    for (Tableau t in tableaux) {
+        // store the victor terms for later
+        List<cass.Term> victorTerms =
+        [
+            for (Constraint c in tableaux.constraints)
+               cass.Term(params[c]!.variable, t.violations[t.victor]![c]!.toDouble())
+        ];
+        for (String cand in t.candidates) {
+            if (cand == t.victor) {
+                continue;
+            }
+            cass.EquationMember thisEquation = victorTerms.fold(cass.cm(0.0), (cass.EquationMember eq, cass.Term term) => eq+term);
+            for (Constraint c in t.constraints) {
+                thisEquation -= cass.cm(t.violations[cand]![c]!.toDouble()) * params[c]!;
+            }
+            constraints.add(thisEquation >= cass.cm(0));
+        }
+    }
+    solver.addConstraints(constraints);
+    Set<dynamic> updates = solver.flushUpdates();
+    return {
+        for (Constraint c in tableaux.constraints)
+        c: params[c]!.value
+    };
 }

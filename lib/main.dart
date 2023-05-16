@@ -243,8 +243,11 @@ class _TableauPageState extends State<TableauPage> {
                                     showRemoveIcon: true,
                                     createButtonAlign: CrossAxisAlignment.end,
                                 ),
-                    ] + [
-                        const Text('You can create, import, edit, and save Tableaux from here. Changes are saved and validated when you press enter in a cell. Type a manicule or capital W followed by a space before a candidate to mark it as a winner.')
+                    ] + <Widget>[
+                        const SizedBox(height: 20),
+                        const Center(
+                            child: Text('You can create, import, edit, and save Tableaux from here. Changes are saved and validated when you press enter in a cell. Type a manicule or capital W followed by a space before a candidate to mark it as a winner.')
+                        )
                     ],
                 ),
             floatingActionButton: Row(

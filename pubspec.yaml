@@ -43,6 +43,7 @@ dependencies:
       url: https://github.com/bhendee/editable-flexfix
       ref: dev-editableaux
   flutter_form_builder: ^7.0.0
+  cassowary: ^0.4.2
 
 
 dev_dependencies:

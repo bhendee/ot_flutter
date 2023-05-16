@@ -37,4 +37,15 @@ void main() {
         );
         expect(() => rankOT(tableaux), throwsFormatException);
     });
+    test('solveHG solves for constraint weights', () {
+        List<Constraint> constraints = Constraint.fromStrings(['A', 'B']);
+        Tableaux tableaux = Tableaux(
+            constraints,
+            [
+                Tableau('a', constraints, ['aa', 'bb'], [[1, 0], [0, 1]], 'aa'),
+                Tableau('b', constraints, ['aa', 'bb'], [[1, 0], [0, 0]], 'bb'),
+            ]
+        );
+        print(solveHG(tableaux));
+    });
 }
