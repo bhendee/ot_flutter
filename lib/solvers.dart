@@ -134,6 +134,6 @@ Map<Constraint, num> solveHG(Tableaux tableaux) {
     solver.flushUpdates();
     return {
         for (Constraint c in tableaux.constraints)
-        c: -params[c]!.value
+        c: params[c]!.value
     };
 }
