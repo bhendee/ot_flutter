@@ -8,4 +8,4 @@ Documentation of Tableaux tab-separated formatting is available for OTHelp elsew
 
 One of the major foci is in-app editing of tableaux, because the tab-separated format is clumsy to edit directly.
 
-Currently this hardly works so don't get your hopes up.
+Currently you can edit tableaux and solve them using classical OT or HG.
