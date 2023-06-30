@@ -131,7 +131,7 @@ class _TableauPageState extends State<TableauPage> {
             _alert('Seems like you put too many victors. Changes not saved.');
         // ignore: deprecated_member_use
         } on CastError {
-            _alert('Seems like you forgot a victor Changes not saved.');
+            _alert('Seems like you forgot a victor. Changes not saved.');
         } catch(e) {
             _alert('Seems like you messed up the Tableaux. Changes not saved.');
         }
