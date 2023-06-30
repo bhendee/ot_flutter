@@ -150,7 +150,7 @@ class _TableauPageState extends State<TableauPage> {
         showDialog(
             context: context,
             builder: (BuildContext context) {
-                List<String> input = [for (Tableau t in tableaux) t.input];
+                Map<String, String> input = {for (Tableau t in tableaux) t.input: t.input};
                 return StatefulBuilder(builder: (BuildContext context, void Function(void Function()) setAlertState)
                     {
 
@@ -160,13 +160,20 @@ class _TableauPageState extends State<TableauPage> {
                                 title: const Text('Input Editing'),
                                 content: Column(
                                         children: <Widget>[
-                                            for (String s in input) 
-                                            FormBuilderTextField(name: s, initialValue: s)
+                                            for (String s in input.keys) 
+                                            Row(children:[
+                                                Expanded(child:FormBuilderTextField(name: s, initialValue: input[s])),
+                                                IconButton(icon: const Icon(Icons.delete), onPressed: () {
+                                                    setAlertState(() {
+                                                        input.remove(s);
+                                                    });
+                                                })
+                                            ])
                                         ] + [
                                             TextButton(
                                                 onPressed: () {
                                                     setAlertState(() {
-                                                        input = input + ['Input ${input.length}'];
+                                                        input['${input.length}'] = 'Input ${input.length}';
                                                     });
                                                 },
                                                 child: const Text('Add Input'),

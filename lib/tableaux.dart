@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 
 class Tableaux extends Iterable<Tableau>{
     late final List<Constraint> constraints;
@@ -38,6 +40,8 @@ class Tableaux extends Iterable<Tableau>{
         }
         return output;
     }
+
+    List<String> get inputs => [for (Tableau t in this) t.input];
 
     /// generates Tableaux from Editable rows and columns
     Tableaux.fromEditables(List<Map<String, List<dynamic>?>> states) {
@@ -204,16 +208,23 @@ class Tableaux extends Iterable<Tableau>{
         List<Tableau> newTableaux = [];
         // revise old tableaux with new input names
         for (Tableau t in tableaux) {
-            newTableaux.add(Tableau.fromFields(
-                newNames[t.input]!,
-                constraints,
-                t.candidates,
-                t.violations,
-                t.victor,
-            ));
+            // don't add if the original name is no longer present
+            if (newNames.keys.contains(t.input)) {
+                newTableaux.add(Tableau.fromFields(
+                    newNames[t.input]!,
+                    constraints,
+                    t.candidates,
+                    t.violations,
+                    t.victor,
+                ));
+            }
         }
         // add new tableaux
-        List<String> names = List<String>.from(newNames.keys).sublist(tableaux.length);
+        List<String> names = [
+            for (String s in newNames.keys)
+                if (!inputs.contains(s))
+                    s
+        ];
         newTableaux += [for (String key in names) 
             Tableau(
                 newNames[key]!,
