@@ -77,7 +77,6 @@ class _TableauPageState extends State<TableauPage> {
                 List<Constraint> constraints = tableaux.constraints;
                 return StatefulBuilder(builder: (BuildContext context, void Function(void Function()) setAlertState)
                     {
-
                         return FormBuilder(
                             key: _constraintFormKey,
                             child:AlertDialog(
@@ -85,7 +84,15 @@ class _TableauPageState extends State<TableauPage> {
                                 content: Column(
                                         children: <Widget>[
                                             for (Constraint c in constraints) 
-                                            FormBuilderTextField(name: '$c', initialValue: '$c')
+                                                Row(children: [
+                                                    Expanded(child:FormBuilderTextField(name: '$c', initialValue: '$c')),
+                                                    IconButton(icon:const Icon(Icons.delete), onPressed: () {
+                                                        setAlertState(() {
+                                                            constraints.remove(c);
+                                                            _constraintFormKey = GlobalKey<FormBuilderState>();
+                                                        });
+                                                    })
+                                                ])
                                         ] + [
                                             TextButton(
                                                 onPressed: () {
@@ -166,6 +173,7 @@ class _TableauPageState extends State<TableauPage> {
                                                 IconButton(icon: const Icon(Icons.delete), onPressed: () {
                                                     setAlertState(() {
                                                         input.remove(s);
+                                                        _inputFormKey = GlobalKey<FormBuilderState>();
                                                     });
                                                 })
                                             ])
